@@ -1,27 +1,42 @@
 # 👑 TaskKing
 
-A personal task management app with a focus on simplicity, speed, and single-task focus.
+A simple task manager / to-do list app built with the idea of focusing on one task (the "King Task") at a time.
 
-TaskKing helps you manage tasks with flexible sorting, freeform tagging, and a unique **King Task** mode that shows only your top-priority task — so you can focus on one thing at a time.
+TaskKing helps you manage tasks with flexible sorting, freeform tagging, and the **King Task** mode that shows only your top-priority task — so you can focus on one thing at a time.
+
+I built this because, as an ADHD adult in a demanding job, I frequently get overwhelmed by the length and complexity of my to-do lists ... but without a to-do list I am adrift! The ability to see *just one task at a time*, but *still* be able to manage the complexity of all my tasks, is something I hadn't found in other applications. As a learning experience, I vibe-coded this app with the assistance of the [Amazon Kiro](https://kiro.dev) agentic AI coding assistant. 
 
 ---
 
 ## Features
 
-- **Task management** — Create, edit, complete, and delete tasks with priority (1-5), due dates, Markdown descriptions, and freeform tags
-- **Multiple sort modes** — Custom (drag-and-drop), priority, due date, creation date, last edited, alphabetical
+- **Task management** — Create, edit, complete, and delete tasks with priority (1-5), due dates, Markdown-formatted notes, and freeform tags
+- **Multiple sort modes** — Custom (drag-and-drop), Priority, Due Date, Creation Date, Last Edited, Alphabetical
 - **King Task mode** — Focus view showing only your #1 task from the custom sort order
-- **Tag filtering** — Click any tag to filter, or search by tag/keyword in the search box
+- **Search** - Keyword search against name, description, and tag in the search box 
+- **Tag filtering** — Click any tag to filter by tag
 - **Markdown descriptions** — Full Markdown support with auto-linked URLs
 - **Soft delete with undo** — 5-second undo window after deleting a task
-- **REST API** — All operations available via authenticated API for external integrations
-- **Portable** — Runs as a standalone desktop app on Windows, Mac, or Linux. No internet required.
+- **REST API** — All operations available via authenticated API for external integrations, such as your local AI agent
+- **Portable** — Runs locally as a standalone desktop app on Windows, Mac, or Linux. Internet access not required.
 
 ---
 
 ## Getting Started
 
-### Run the packaged app (no setup required)
+### Windows
+
+#### Installation (Windows)
+
+1. Download the latest `TaskKing-1.0.0-win64.zip` from the [Releases](https://github.com/ghritter/TaskKing/releases) page
+2. Extract the zip to any folder (e.g., `C:\Programs\TaskKing\` or your Desktop)
+3. Double-click `TaskKing.exe` to run
+
+No installer required. The entire app is self-contained in the extracted folder.
+
+**Note:** Windows SmartScreen may show a "Windows protected your PC" warning on first launch because the app is not code-signed. Click **More info** → **Run anyway** to proceed. This only happens once.
+
+#### Run the packaged app (Windows)
 
 1. Navigate to `dist/TaskKing-win32-x64/`
 2. Double-click `TaskKing.exe`
@@ -29,9 +44,33 @@ TaskKing helps you manage tasks with flexible sorting, freeform tagging, and a u
 
 The database is stored at `%APPDATA%/TaskKing/taskking.db` (Windows).
 
-### Run in development mode
+### macOS
 
-Requires Node.js v20+.
+#### Installation (macOS)
+
+*Coming soon*
+
+#### Run the packaged app (macOS)
+
+*Coming soon*
+
+### Linux
+
+#### Installation (Linux)
+
+*Coming soon*
+
+#### Run the packaged app (Linux)
+
+*Coming soon* 
+
+### Dev Mode
+
+#### Run in development mode
+
+Requires Node.js v20+ is installed. 
+
+From the command line: 
 
 ```bash
 cd TaskKing
@@ -66,13 +105,13 @@ Use the dropdown to switch between sort modes:
 - **Due Date** — Earliest deadline first
 - **Created Date** — Newest first
 - **Last Edited** — Most recently modified first
-- **Alphabetical** — A-Z
+- **Alphabetical** — A-Z by Task title
 
 Drag handles only appear in Custom Order mode.
 
 ### King Task mode
 
-Toggle **👑 King Task** to enter focus mode. This shows only the top task from your Custom Sort order with its full description rendered. Complete it to automatically see the next task.
+Toggle **👑 King Task** to enter focus mode. This shows only the top task **from your Custom Order sort** with its full description rendered. Complete it to automatically see the next task from the Custom Order sor
 
 ### Filtering
 
@@ -89,7 +128,7 @@ Toggle **👑 King Task** to enter focus mode. This shows only the top task from
 
 ## API
 
-TaskKing exposes a REST API on `http://127.0.0.1:7878` for external integrations.
+TaskKing exposes a REST API on `http://127.0.0.1:7878` for external integrations, such as with your local AI agent. 
 
 ### Authentication
 
@@ -99,7 +138,9 @@ All requests require an API key in the Authorization header:
 Authorization: Bearer YOUR_API_KEY
 ```
 
-View your API key in **Settings** (gear icon in the header).
+View, copy, or regenerate your API key in **Settings** (gear icon in the header). 
+
+Note: if you regenerate the API key, any integrations relying on the previous key will no longer work.  
 
 ### Endpoints
 
@@ -126,7 +167,7 @@ curl -X POST http://127.0.0.1:7878/api/tasks \
   -d '{"name": "Follow up with client", "priority": 2, "due_date": "2026-05-20", "tags": ["email", "client"]}'
 ```
 
-### Example: List tasks filtered by tag
+### Example API call: List tasks filtered by tag
 
 ```
 GET /api/tasks?tag=client&sort=priority
@@ -137,7 +178,7 @@ GET /api/tasks?tag=client&sort=priority
 ## Data Storage
 
 - **Database:** SQLite (via sql.js), stored as a single file
-- **Location:** `%APPDATA%/TaskKing/taskking.db` (Windows), `~/Library/Application Support/TaskKing/taskking.db` (Mac)
+- **Location:** `%APPDATA%/TaskKing/taskking.db` (Windows), `~/Library/Application Support/TaskKing/taskking.db` (Mac), `~/.config/TaskKing/taskking.db` (Linux)
 - **Backup:** Copy the `.db` file to back up all your tasks
 - **Soft deletes:** Deleted tasks are retained for 30 days before permanent removal
 
@@ -206,10 +247,14 @@ npx @electron/packager . TaskKing --platform=darwin --arch=x64 --out=dist --over
 ## Roadmap
 
 ### Phase 2 — Quality of life
-- Dark mode toggle
+- Settings
+  - Dark mode setting
+  - Export/import (JSON)
+  - View last 30-days deleted tasks
 - Keyboard shortcuts (n=new, x=complete, t=pop to top)
-- Export/import (JSON)
 - 30-day soft-delete auto-cleanup
+- macOS build
+- Linunx build
 
 ### Phase 3 — Cloud deployment
 - Deploy as a web app (same codebase, no Electron)
