@@ -1,6 +1,7 @@
 <script>
   import { sortMode, searchQuery, activeTagFilters } from '../lib/stores.js';
   import { updateSettings } from '../lib/api.js';
+  import { X } from 'lucide-svelte';
 
   let searchInput = '';
   let searchTimeout;
@@ -8,8 +9,13 @@
   function onSearchInput() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-      $searchQuery = searchInput;
+      $searchQuery = searchInput.trim();
     }, 300);
+  }
+
+  function clearSearch() {
+    searchInput = '';
+    $searchQuery = '';
   }
 
   function removeFilter(tag) {
@@ -34,6 +40,9 @@
       on:input={onSearchInput}
       aria-label="Search tasks"
     >
+    {#if searchInput}
+      <button class="search-clear" on:click={clearSearch} aria-label="Clear search"><X size={14} /></button>
+    {/if}
   </div>
 
   <select class="sort-select" value={$sortMode} on:change={onSortChange} aria-label="Sort tasks by">
@@ -67,6 +76,8 @@
   .search-box svg { width: 16px; height: 16px; color: var(--text-muted); margin-right: 8px; flex-shrink: 0; }
   .search-box input { background: none; border: none; color: var(--text); font-size: 14px; width: 100%; outline: none; }
   .search-box input::placeholder { color: var(--text-muted); }
+  .search-clear { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; display: flex; align-items: center; border-radius: 4px; }
+  .search-clear:hover { color: var(--text); background: var(--surface-hover); }
   .sort-select {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     color: var(--text); font-size: 13px; padding: 8px 14px; cursor: pointer; outline: none; box-shadow: var(--shadow);

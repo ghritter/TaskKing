@@ -1,4 +1,5 @@
 <script>
+  import { Crown } from 'lucide-svelte';
   export let label = '';
   export let checked = false;
   export let variant = 'default';
@@ -9,7 +10,10 @@
     <input type="checkbox" bind:checked aria-label={label}>
     <span class="toggle-slider"></span>
   </label>
-  <span class="toggle-label">{label}</span>
+  <span class="toggle-label">
+    {#if variant === 'king'}<Crown size={16} color="var(--gold)" />{/if}
+    {label}
+  </span>
 </div>
 
 <style>
@@ -24,5 +28,5 @@
   .toggle input:checked + .toggle-slider { background: var(--purple); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
   .king .toggle input:checked + .toggle-slider { background: var(--gold); }
-  .toggle-label { cursor: default; }
+  .toggle-label { cursor: default; display: inline-flex; align-items: center; gap: 4px; }
 </style>

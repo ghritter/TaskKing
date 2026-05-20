@@ -2,6 +2,7 @@
   import { tasks, editingTask } from '../lib/stores.js';
   import { toggleComplete, fetchTasks } from '../lib/api.js';
   import { renderMarkdown, getDueDateStatus, getDueDateLabel } from '../lib/utils.js';
+  import { Crown, CalendarDays, TriangleAlert } from 'lucide-svelte';
 
   $: kingTask = $tasks.filter(t => !t.completed && !t.deleted)[0] || null;
   $: dueDateStatus = kingTask ? getDueDateStatus(kingTask.due_date) : null;
@@ -24,13 +25,20 @@
 <div class="king-view">
   {#if kingTask}
     <div class="king-card">
-      <div class="king-crown">&#x1F451;</div>
+      <div class="king-crown"><Crown size={48} color="var(--gold)" /></div>
       <div class="king-label">Your King Task</div>
       <div class="king-task-name">{kingTask.name}</div>
       <div class="king-meta">
         <span class="priority-badge priority-{kingTask.priority}">P{kingTask.priority}</span>
         {#if kingTask.due_date}
-          <span class="task-due {dueDateStatus}">{dueDateLabel}</span>
+          <span class="task-due {dueDateStatus}">
+            {#if dueDateStatus === 'overdue'}
+              <TriangleAlert size={14} />
+            {:else}
+              <CalendarDays size={14} />
+            {/if}
+            {dueDateLabel}
+          </span>
         {/if}
         {#if kingTask.tags && kingTask.tags.length > 0}
           <div class="task-tags">
@@ -50,7 +58,7 @@
     </div>
   {:else}
     <div class="king-empty">
-      <div class="king-crown">&#x1F451;</div>
+      <div class="king-crown"><Crown size={48} color="var(--text-muted)" /></div>
       <p>All tasks complete. Long live the King.</p>
     </div>
   {/if}
@@ -67,7 +75,7 @@
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
     background: linear-gradient(90deg, var(--purple), var(--gold-light), var(--purple));
   }
-  .king-crown { font-size: 48px; margin-bottom: 12px; }
+  .king-crown { margin-bottom: 12px; display: flex; justify-content: center; }
   .king-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 16px; }
   .king-task-name { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 16px; line-height: 1.3; }
   .king-meta { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -77,7 +85,7 @@
   .priority-3 { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border); }
   .priority-4 { background: rgba(234, 88, 12, 0.08); color: #ea580c; border: 1px solid rgba(234, 88, 12, 0.2); }
   .priority-5 { background: rgba(120, 113, 108, 0.08); color: #78716c; border: 1px solid rgba(120, 113, 108, 0.2); }
-  .task-due { font-size: 13px; color: var(--text-muted); }
+  .task-due { font-size: 13px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; }
   .task-due.overdue { color: var(--red); font-weight: 600; }
   .task-due.today { color: var(--gold); font-weight: 600; }
   .task-due.tomorrow { color: var(--purple); font-weight: 600; }

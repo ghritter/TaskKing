@@ -9,3 +9,4 @@ export const showDueDates = writable(true);
 export const isKingView = writable(false);
 export const editingTask = writable(null);
 export const toastMessage = writable(null);
+export const selectedTaskIds = writable([]);

@@ -4,7 +4,25 @@ A simple task manager / to-do list app built with the idea of focusing on one ta
 
 TaskKing helps you manage tasks with flexible sorting, freeform tagging, and the **King Task** mode that shows only your top-priority task — so you can focus on one thing at a time.
 
-I built this because, as an ADHD adult in a demanding job, I frequently get overwhelmed by the length and complexity of my to-do lists ... but without a to-do list I am adrift! The ability to see *just one task at a time*, but *still* be able to manage the complexity of all my tasks, is something I hadn't found in other applications. As a learning experience, I vibe-coded this app with the assistance of the [Amazon Kiro](https://kiro.dev) agentic AI coding assistant. 
+I built this because, as an ADHD adult in a demanding job, I frequently get overwhelmed by the length and complexity of my to-do lists ... but without a to-do list I am adrift! The ability to see *just one task at a time*, but *still* be able to manage the complexity of *all** my tasks, is something I hadn't found in other applications. As a learning experience, I "vibe-coded" this app with the assistance of the [Amazon Kiro](https://kiro.dev) agentic AI coding assistant. 
+
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [API](#api)
+- [Keyboard Shortcuts](#keyboard-shortcuts)
+- [Data Storage](#data-storage)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Building](#building)
+- [Roadmap](#roadmap)
+- [License](#license)
+
 
 ---
 
@@ -12,13 +30,21 @@ I built this because, as an ADHD adult in a demanding job, I frequently get over
 
 - **Task management** — Create, edit, complete, and delete tasks with priority (1-5), due dates, Markdown-formatted notes, and freeform tags
 - **Multiple sort modes** — Custom (drag-and-drop), Priority, Due Date, Creation Date, Last Edited, Alphabetical
-- **King Task mode** — Focus view showing only your #1 task from the custom sort order
-- **Search** - Keyword search against name, description, and tag in the search box 
+- **King Task mode** — Focus view showing *only* your #1 task from the custom sort order
+- **Task selection** — Click to select, Ctrl+click for multi-select. Act on selected tasks with keyboard shortcuts.
+- **Keyboard shortcuts** — `n` (new), `x` (complete), `t` (pop to top), `d` (delete), `Escape` (clear)
+- **Search** — Keyword search against name, description, and tags
 - **Tag filtering** — Click any tag to filter by tag
 - **Markdown descriptions** — Full Markdown support with auto-linked URLs
-- **Soft delete with undo** — 5-second undo window after deleting a task
+- **Dark mode** — Toggle between light and dark themes in Settings
+- **Export / Import** — Back up and restore tasks as JSON
+- **Soft delete with undo** — 5-second undo window; deleted tasks recoverable for 30 days via Settings
 - **REST API** — All operations available via authenticated API for external integrations, such as your local AI agent
-- **Portable** — Runs locally as a standalone desktop app on Windows, Mac, or Linux. Internet access not required.
+- **Portable** — Runs locally as a standalone desktop app on Windows, macOS, or Linux. Internet access not required. 
+
+
+
+[Back to top](#-taskking)
 
 ---
 
@@ -28,7 +54,7 @@ I built this because, as an ADHD adult in a demanding job, I frequently get over
 
 #### Installation (Windows)
 
-1. Download the latest `TaskKing-1.0.0-win64.zip` from the [Releases](https://github.com/ghritter/TaskKing/releases) page
+1. Download the latest release from the [Releases](https://github.com/ghritter/TaskKing/releases) page
 2. Extract the zip to any folder (e.g., `C:\Programs\TaskKing\` or your Desktop)
 3. Double-click `TaskKing.exe` to run
 
@@ -46,23 +72,26 @@ The database is stored at `%APPDATA%/TaskKing/taskking.db` (Windows).
 
 ### macOS
 
-#### Installation (macOS)
+#### Installation (macOS — Apple Silicon)
 
-*Coming soon*
+1. Download the latest `TaskKing-1.1.0-darwin-arm64.zip` from the [Releases](https://github.com/ghritter/TaskKing/releases) page
+2. Extract the zip
+3. Drag `TaskKing.app` to your Applications folder
+4. Double-click to run
 
-#### Run the packaged app (macOS)
+**Note:** macOS Gatekeeper may block the app on first launch because it's not code-signed. Right-click the app → **Open** → **Open** to bypass. This only happens once.
 
-*Coming soon*
+The database is stored at `~/Library/Application Support/TaskKing/taskking.db`.
 
 ### Linux
 
 #### Installation (Linux)
 
-*Coming soon*
+1. Download the latest `TaskKing-1.1.0-linux-x64.zip` from the [Releases](https://github.com/ghritter/TaskKing/releases) page
+2. Extract the zip to any folder (e.g., `~/Applications/TaskKing/`)
+3. Run `./TaskKing` from the extracted folder (you may need to `chmod +x TaskKing` first)
 
-#### Run the packaged app (Linux)
-
-*Coming soon* 
+The database is stored at `~/.config/TaskKing/taskking.db`.
 
 ### Dev Mode
 
@@ -80,18 +109,22 @@ npm run dev
 
 This starts the Vite dev server and Electron together. The app opens automatically.
 
+
+
+[Back to top](#-taskking)
+
 ---
 
 ## Usage
 
 ### Creating tasks
 
-Click **+ New Task** or use the API. Each task has:
+Click **+ New Task**, use the `n` keyboard shortcut, or use the API. Each task has:
 
 | Field | Description |
 |-------|-------------|
 | Name | Task title (required) |
-| Priority | 1 (highest) to 5 (lowest) |
+| Priority | 1 (highest) to 5 (lowest) - default is 3 |
 | Due date | Optional deadline |
 | Description | Markdown-formatted notes |
 | Tags | Freeform labels (space, comma, or Enter to add) |
@@ -111,18 +144,22 @@ Drag handles only appear in Custom Order mode.
 
 ### King Task mode
 
-Toggle **👑 King Task** to enter focus mode. This shows only the top task **from your Custom Order sort** with its full description rendered. Complete it to automatically see the next task from the Custom Order sor
+Toggle **King Task** to enter focus mode. This shows only the top task **from your Custom Order sort** with its full description rendered. Complete it to automatically see the next task from the Custom Order sort.
 
 ### Filtering
 
-- **Search box** — Matches task names, descriptions, and tags
+- **Search box** — Matches against task names, descriptions, and tags. Click the `X` icon to clear the search box. 
 - **Click a tag** — Filters the list to tasks with that tag
 - **Active filters** — Shown as chips below the toolbar; click × to remove
 
 ### Toggles
 
 - **Show completed** — Hide/show completed tasks in the list
-- **Show due dates** — Hide/show due date labels (reduces visual stress)
+- **Show due dates** — Hide/show due date labels (reduces visual stress arounding impending due dates)
+
+
+
+[Back to top](#-taskking)
 
 ---
 
@@ -158,7 +195,7 @@ Note: if you regenerate the API key, any integrations relying on the previous ke
 | GET | /api/settings | Get app settings |
 | PUT | /api/settings | Update app settings |
 
-### Example: Create a task
+### Example 1: Create a task
 
 ```bash
 curl -X POST http://127.0.0.1:7878/api/tasks \
@@ -167,11 +204,15 @@ curl -X POST http://127.0.0.1:7878/api/tasks \
   -d '{"name": "Follow up with client", "priority": 2, "due_date": "2026-05-20", "tags": ["email", "client"]}'
 ```
 
-### Example API call: List tasks filtered by tag
+### Example 2: List tasks filtered by tag
 
 ```
 GET /api/tasks?tag=client&sort=priority
 ```
+
+
+
+[Back to top](#-taskking)
 
 ---
 
@@ -181,6 +222,10 @@ GET /api/tasks?tag=client&sort=priority
 - **Location:** `%APPDATA%/TaskKing/taskking.db` (Windows), `~/Library/Application Support/TaskKing/taskking.db` (Mac), `~/.config/TaskKing/taskking.db` (Linux)
 - **Backup:** Copy the `.db` file to back up all your tasks
 - **Soft deletes:** Deleted tasks are retained for 30 days before permanent removal
+
+
+
+[Back to top](#-taskking)
 
 ---
 
@@ -196,6 +241,10 @@ GET /api/tasks?tag=client&sort=priority
 | Markdown | marked |
 | Drag-and-drop | SortableJS |
 | Build | Vite + @electron/packager |
+
+
+
+[Back to top](#-taskking)
 
 ---
 
@@ -220,6 +269,10 @@ TaskKing/
 └── package.json
 ```
 
+
+
+[Back to top](#-taskking)
+
 ---
 
 ## Building
@@ -233,33 +286,66 @@ npx vite build --config vite.config.mjs
 ### Package for Windows
 
 ```bash
-npx @electron/packager . TaskKing --platform=win32 --arch=x64 --out=dist --overwrite
+npx @electron/packager . TaskKing --platform=win32 --arch=x64 --out=dist --overwrite --icon=src/renderer/assets/icon.ico
 ```
 
-### Package for Mac
+### Package for Mac (Apple Silicon)
 
 ```bash
-npx @electron/packager . TaskKing --platform=darwin --arch=x64 --out=dist --overwrite
+npx @electron/packager . TaskKing --platform=darwin --arch=arm64 --out=dist --overwrite --icon=src/renderer/assets/icon-256.png
 ```
+
+Note: macOS builds require a Mac or admin privileges on Windows (for symlink creation).
+
+### Package for Linux
+
+```bash
+npx @electron/packager . TaskKing --platform=linux --arch=x64 --out=dist --overwrite --icon=src/renderer/assets/icon-256.png
+```
+
+
+
+[Back to top](#-taskking)
+
+---
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `n` | New task |
+| `x` | Complete selected task(s) |
+| `t` | Pop selected task to top of custom sort |
+| `d` or `Delete` | Delete selected task(s) |
+| `Escape` | Clear selection / close panel |
+
+Shortcuts are disabled when typing in an input field or when a panel is open.
+
+
+
+[Back to top](#-taskking)
 
 ---
 
 ## Roadmap
 
-### Phase 2 — Quality of life
-- Settings
-  - Dark mode setting
-  - Export/import (JSON)
-  - View last 30-days deleted tasks
-- Keyboard shortcuts (n=new, x=complete, t=pop to top)
-- 30-day soft-delete auto-cleanup
-- macOS build
-- Linunx build
+### Phase 1 - Initial release 
+- Completed and released as v1.0.0. 
+
+### Phase 2 - Quality of life updates
+- Completed and released as v1.1.0.
 
 ### Phase 3 — Cloud deployment
-- Deploy as a web app (same codebase, no Electron)
-- Authentication for browser access
-- Accessible from any device
+- Deployable as a web app (same codebase, no Electron)
+  - Authentication for browser access
+  - Accessible from any device
+- Features/enhancements
+  - Improved tag management
+  - Calendar picker improvements in dark mode
+
+
+
+[Back to top](#-taskking)
 
 ---
 

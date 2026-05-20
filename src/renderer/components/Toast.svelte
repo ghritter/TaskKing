@@ -15,9 +15,13 @@
   }
 
   async function handleUndo() {
-    if ($toastMessage && $toastMessage.taskId) {
-      const result = await undoDelete($toastMessage.taskId);
-      if (result) {
+    if ($toastMessage) {
+      // Handle multi-delete undo
+      const ids = $toastMessage.taskIds || ($toastMessage.taskId ? [$toastMessage.taskId] : []);
+      for (const id of ids) {
+        await undoDelete(id);
+      }
+      if (ids.length > 0) {
         const refreshed = await fetchTasks({ sort: 'custom', show_completed: 'true' });
         if (refreshed) $tasks = refreshed.tasks;
       }
@@ -37,7 +41,7 @@
 {#if visible && $toastMessage}
   <div class="toast" role="alert" aria-live="polite">
     <span>{$toastMessage.text}</span>
-    {#if $toastMessage.taskId}
+    {#if $toastMessage.taskId || ($toastMessage.taskIds && $toastMessage.taskIds.length > 0)}
       <button class="undo-btn" on:click={handleUndo}>Undo</button>
     {/if}
     <button class="dismiss-btn" on:click={dismiss} aria-label="Dismiss">&times;</button>
@@ -47,9 +51,9 @@
 <style>
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--text); color: #fff; padding: 12px 20px; border-radius: var(--radius);
+    background: #2d2a26; color: #fff; padding: 12px 20px; border-radius: var(--radius);
     font-size: 14px; display: flex; align-items: center; gap: 12px;
-    box-shadow: var(--shadow-lg); z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000;
     animation: fadeIn 0.2s ease;
   }
   @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }

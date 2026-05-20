@@ -1,10 +1,13 @@
 <script>
-  import { showDueDates, sortMode, activeTagFilters, editingTask, toastMessage } from '../lib/stores.js';
+  import { showDueDates, sortMode, activeTagFilters, editingTask, toastMessage, selectedTaskIds } from '../lib/stores.js';
   import { toggleComplete, popToTop, deleteTask } from '../lib/api.js';
   import { getDueDateStatus, getDueDateLabel } from '../lib/utils.js';
+  import { CalendarDays, FilePenLine, ArrowUpToLine, Pencil, Trash, TriangleAlert } from 'lucide-svelte';
 
   export let task;
   export let onUpdate = () => {};
+
+  $: isSelected = $selectedTaskIds.includes(task.id);
 
   $: dueDateStatus = getDueDateStatus(task.due_date);
   $: dueDateLabel = getDueDateLabel(task.due_date);
@@ -22,12 +25,30 @@
   async function handleDelete() {
     const result = await deleteTask(task.id);
     if (result) {
-      $toastMessage = { text: 'Task deleted.', taskId: task.id };
+      $toastMessage = { text: 'Task deleted.', taskIds: [task.id] };
       onUpdate();
     }
   }
 
   function handleEdit() {
+    $editingTask = { ...task, isNew: false };
+  }
+
+  function handleSelect(e) {
+    if (e.ctrlKey || e.metaKey) {
+      // Multi-select: toggle this task in selection
+      if ($selectedTaskIds.includes(task.id)) {
+        $selectedTaskIds = $selectedTaskIds.filter(id => id !== task.id);
+      } else {
+        $selectedTaskIds = [...$selectedTaskIds, task.id];
+      }
+    } else {
+      // Single select
+      $selectedTaskIds = [task.id];
+    }
+  }
+
+  function handleDblClick() {
     $editingTask = { ...task, isNew: false };
   }
 
@@ -42,7 +63,7 @@
   }
 </script>
 
-<div class="task-item" class:completed={task.completed} role="listitem">
+<div class="task-item" class:completed={task.completed} class:selected={isSelected} role="listitem" on:click={handleSelect} on:dblclick={handleDblClick}>
   <div class="drag-handle" class:hidden={$sortMode !== 'custom'} aria-hidden="true">
     <span></span><span></span><span></span>
   </div>
@@ -54,14 +75,21 @@
     aria-label={task.completed ? 'Mark as incomplete' : 'Mark as complete'}
   ></button>
 
-  <div class="task-content" on:click={handleEdit} on:keydown={(e) => e.key === 'Enter' && handleEdit()} role="button" tabindex="0">
+  <div class="task-content">
     <div class="task-top-row">
       <span class="priority-badge {getPriorityClass(task.priority)}">P{task.priority}</span>
       <span class="task-name">{task.name}</span>
     </div>
     <div class="task-meta">
       {#if $showDueDates && task.due_date}
-        <span class="task-due {dueDateStatus}">{dueDateLabel}</span>
+        <span class="task-due {dueDateStatus}">
+          {#if dueDateStatus === 'overdue'}
+            <TriangleAlert size={14} />
+          {:else}
+            <CalendarDays size={14} />
+          {/if}
+          {dueDateLabel}
+        </span>
       {/if}
       {#if task.tags && task.tags.length > 0}
         <div class="task-tags">
@@ -71,17 +99,17 @@
         </div>
       {/if}
       {#if task.description}
-        <span class="note-indicator">&#128221; Note</span>
+        <button class="note-indicator" on:click|stopPropagation={handleEdit} aria-label="View note"><FilePenLine size={14} /> Note</button>
       {/if}
     </div>
   </div>
 
   <div class="task-actions">
     {#if $sortMode === 'custom'}
-      <button class="btn-icon" on:click|stopPropagation={handlePopToTop} title="Pop to top" aria-label="Move task to top">&#11014;</button>
+      <button class="btn-icon" on:click|stopPropagation={handlePopToTop} title="Pop to top" aria-label="Move task to top"><ArrowUpToLine size={16} /></button>
     {/if}
-    <button class="btn-icon" on:click|stopPropagation={handleEdit} title="Edit" aria-label="Edit task">&#9998;</button>
-    <button class="btn-icon" on:click|stopPropagation={handleDelete} title="Delete" aria-label="Delete task">&#128465;</button>
+    <button class="btn-icon" on:click|stopPropagation={handleEdit} title="Edit" aria-label="Edit task"><Pencil size={16} /></button>
+    <button class="btn-icon btn-icon-delete" on:click|stopPropagation={handleDelete} title="Delete" aria-label="Delete task"><Trash size={16} /></button>
   </div>
 </div>
 
@@ -93,6 +121,7 @@
   }
   .task-item:hover { border-color: var(--purple-border); box-shadow: var(--shadow-lg); }
   .task-item.completed { opacity: 0.5; }
+  .task-item.selected { background: var(--gold-bg); border-color: var(--gold-border); }
   .task-item.completed .task-name { text-decoration: line-through; color: var(--text-muted); }
   .drag-handle {
     display: flex; flex-direction: column; gap: 2px; padding: 6px 3px;
@@ -119,7 +148,7 @@
   .priority-5 { background: rgba(120, 113, 108, 0.08); color: #78716c; border: 1px solid rgba(120, 113, 108, 0.2); }
   .task-name { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .task-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .task-due { font-size: 12px; color: var(--text-muted); }
+  .task-due { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; }
   .task-due.overdue { color: var(--red); font-weight: 600; }
   .task-due.today { color: var(--gold); font-weight: 600; }
   .task-due.tomorrow { color: var(--purple); font-weight: 600; }
@@ -129,7 +158,8 @@
     color: var(--text-muted); font-weight: 500; cursor: pointer; transition: all 0.15s; border: none;
   }
   .tag:hover { background: var(--purple); color: #fff; }
-  .note-indicator { font-size: 12px; color: var(--text-muted); }
+  .note-indicator { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .note-indicator:hover { background: var(--surface-hover); color: var(--purple); }
   .task-actions { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
   .task-item:hover .task-actions { opacity: 1; }
   .btn-icon {
@@ -137,4 +167,6 @@
     border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;
   }
   .btn-icon:hover { background: var(--surface-hover); color: var(--text); }
+  .btn-icon-delete { color: var(--red); }
+  .btn-icon-delete:hover { background: rgba(220, 38, 38, 0.08); color: var(--red); }
 </style>

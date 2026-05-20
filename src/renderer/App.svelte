@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import { tasks, sortMode, searchQuery, activeTagFilters, showCompleted, showDueDates, isKingView, editingTask, toastMessage } from './lib/stores.js';
-  import { fetchTasks, fetchSettings } from './lib/api.js';
+  import { tasks, sortMode, searchQuery, activeTagFilters, showCompleted, showDueDates, isKingView, editingTask, toastMessage, selectedTaskIds } from './lib/stores.js';
+  import { fetchTasks, fetchSettings, toggleComplete, popToTop, deleteTask } from './lib/api.js';
   import Header from './components/Header.svelte';
   import Toolbar from './components/Toolbar.svelte';
   import Toggle from './components/Toggle.svelte';
@@ -14,6 +14,12 @@
   let showSettings = false;
 
   onMount(async () => {
+    // Load theme preference
+    const savedTheme = localStorage.getItem('taskking-theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
     // Load settings
     const settings = await fetchSettings();
     if (settings) {
@@ -43,7 +49,69 @@
   $: if ($sortMode || $showCompleted !== undefined || $searchQuery !== undefined || $activeTagFilters) {
     loadTasks();
   }
+
+  // Keyboard shortcuts
+  function handleGlobalKeydown(e) {
+    // Don't trigger shortcuts when typing in an input/textarea
+    const tag = e.target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    // Don't trigger when a modal/panel is open
+    if ($editingTask !== null || showSettings) return;
+
+    switch (e.key) {
+      case 'n':
+        e.preventDefault();
+        $editingTask = { isNew: true, name: '', description: '', priority: 3, due_date: null, tags: [] };
+        break;
+      case 'x':
+        e.preventDefault();
+        completeSelected();
+        break;
+      case 't':
+        e.preventDefault();
+        popToTopSelected();
+        break;
+      case 'd':
+      case 'Delete':
+        e.preventDefault();
+        deleteSelected();
+        break;
+      case 'Escape':
+        $selectedTaskIds = [];
+        break;
+    }
+  }
+
+  async function completeSelected() {
+    if ($selectedTaskIds.length === 0) return;
+    for (const id of $selectedTaskIds) {
+      await toggleComplete(id);
+    }
+    $selectedTaskIds = [];
+    await loadTasks();
+  }
+
+  async function popToTopSelected() {
+    if ($selectedTaskIds.length === 0) return;
+    // Pop the first selected task to top
+    await popToTop($selectedTaskIds[0]);
+    $selectedTaskIds = [];
+    await loadTasks();
+  }
+
+  async function deleteSelected() {
+    if ($selectedTaskIds.length === 0) return;
+    const deletedIds = [...$selectedTaskIds];
+    for (const id of deletedIds) {
+      await deleteTask(id);
+    }
+    $toastMessage = { text: `${deletedIds.length} task${deletedIds.length > 1 ? 's' : ''} deleted.`, taskIds: deletedIds };
+    $selectedTaskIds = [];
+    await loadTasks();
+  }
 </script>
+
+<svelte:window on:keydown={handleGlobalKeydown} />
 
 <div class="app-container" role="main" aria-label="TaskKing application">
   <Header onSettingsClick={() => showSettings = true} />
@@ -52,7 +120,7 @@
   <div class="toggles-row">
     <Toggle label="Show completed" bind:checked={$showCompleted} />
     <Toggle label="Show due dates" bind:checked={$showDueDates} />
-    <Toggle label="👑 King Task" bind:checked={$isKingView} variant="king" />
+    <Toggle label="King Task" bind:checked={$isKingView} variant="king" />
   </div>
 
   {#if $isKingView}
@@ -66,7 +134,7 @@
   {/if}
 
   <Toast />
-  <Settings visible={showSettings} onClose={() => showSettings = false} />
+  <Settings visible={showSettings} onClose={() => showSettings = false} onTasksChanged={loadTasks} />
 </div>
 
 <style>

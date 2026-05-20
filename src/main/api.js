@@ -157,6 +157,53 @@ function startApi(port) {
     res.status(201).json({ ...task, completed: !!task.completed, deleted: !!task.deleted, tags: taskTags });
   });
 
+  // POST /api/tasks/import (bulk import with preserved timestamps, appends to bottom)
+  app.post('/api/tasks/import', (req, res) => {
+    const { tasks: importTasks } = req.body;
+
+    if (!Array.isArray(importTasks)) {
+      return res.status(400).json({ error: 'Body must contain a "tasks" array' });
+    }
+
+    // Get current max sort_order
+    const maxRow = queryOne('SELECT MAX(sort_order) as max_sort FROM tasks WHERE deleted = 0');
+    let nextSort = (maxRow && maxRow.max_sort !== null) ? maxRow.max_sort + 1 : 0;
+
+    const now = new Date().toISOString();
+    let imported = 0;
+
+    for (const t of importTasks) {
+      if (!t.name || !t.name.trim()) continue;
+
+      const id = uuidv4();
+      const created = t.created_at || now;
+      const updated = t.updated_at || now;
+      const priority = (t.priority >= 1 && t.priority <= 5) ? t.priority : 3;
+      const completed = t.completed ? 1 : 0;
+      const completedAt = t.completed_at || null;
+
+      run(
+        'INSERT INTO tasks (id, name, description, priority, due_date, created_at, updated_at, completed, completed_at, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [id, t.name.trim(), t.description || '', priority, t.due_date || null, created, updated, completed, completedAt, nextSort]
+      );
+
+      // Insert tags
+      const tags = t.tags || [];
+      for (const tag of tags) {
+        const normalized = tag.toLowerCase().replace(/\s+/g, '');
+        if (normalized) {
+          run('INSERT OR IGNORE INTO task_tags (task_id, tag) VALUES (?, ?)', [id, normalized]);
+        }
+      }
+
+      nextSort++;
+      imported++;
+    }
+
+    saveDb();
+    res.status(201).json({ success: true, imported });
+  });
+
   // PUT /api/tasks/:id
   app.put('/api/tasks/:id', (req, res) => {
     const task = queryOne('SELECT * FROM tasks WHERE id = ? AND deleted = 0', [req.params.id]);
@@ -226,6 +273,20 @@ function startApi(port) {
     if (now - deletedAt > 5000) {
       return res.status(410).json({ error: 'Undo window expired' });
     }
+
+    run('UPDATE tasks SET deleted = 0, deleted_at = NULL WHERE id = ?', [req.params.id]);
+    saveDb();
+
+    const restored = queryOne('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+    const tags = queryAll('SELECT tag FROM task_tags WHERE task_id = ?', [req.params.id]).map(r => r.tag);
+
+    res.json({ ...restored, completed: !!restored.completed, deleted: !!restored.deleted, tags });
+  });
+
+  // POST /api/tasks/:id/restore (no time limit — for Settings panel)
+  app.post('/api/tasks/:id/restore', (req, res) => {
+    const task = queryOne('SELECT * FROM tasks WHERE id = ? AND deleted = 1', [req.params.id]);
+    if (!task) return res.status(404).json({ error: 'Task not found or not deleted' });
 
     run('UPDATE tasks SET deleted = 0, deleted_at = NULL WHERE id = ?', [req.params.id]);
     saveDb();

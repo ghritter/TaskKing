@@ -1,4 +1,5 @@
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 // Auto-link bare URLs in text
 const linkifyExtension = {
@@ -26,7 +27,11 @@ marked.use({ extensions: [linkifyExtension] });
 
 export function renderMarkdown(text) {
   if (!text) return '';
-  return marked.parse(text, { breaks: true });
+  const raw = marked.parse(text, { breaks: true });
+  return DOMPurify.sanitize(raw, {
+    ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'del', 'ul', 'ol', 'li', 'a', 'code', 'pre', 'blockquote', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  });
 }
 
 // Date utilities
@@ -69,9 +74,9 @@ export function getDueDateLabel(dateStr) {
   const formatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   switch (status) {
-    case 'overdue': return `\u26A0 Overdue \u2014 ${formatted}`;
-    case 'today': return `\uD83D\uDCC5 Due today`;
-    case 'tomorrow': return `\uD83D\uDCC5 Due tomorrow`;
-    default: return `\uD83D\uDCC5 ${formatted}`;
+    case 'overdue': return `Overdue \u2014 ${formatted}`;
+    case 'today': return `Due today`;
+    case 'tomorrow': return `Due tomorrow`;
+    default: return `${formatted}`;
   }
 }
