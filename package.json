@@ -1,6 +1,6 @@
 {
   "name": "taskking",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Personal task management with King Task focus mode",
   "main": "src/main/index.js",
   "scripts": {

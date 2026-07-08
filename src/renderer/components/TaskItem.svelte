@@ -1,7 +1,7 @@
 <script>
   import { showDueDates, sortMode, activeTagFilters, editingTask, toastMessage, selectedTaskIds } from '../lib/stores.js';
   import { toggleComplete, popToTop, deleteTask } from '../lib/api.js';
-  import { getDueDateStatus, getDueDateLabel } from '../lib/utils.js';
+  import { getDueDateStatus, getDueDateLabel, getCompletedDateInfo, formatDate } from '../lib/utils.js';
   import { CalendarDays, FilePenLine, ArrowUpToLine, Pencil, Trash, TriangleAlert } from 'lucide-svelte';
 
   export let task;
@@ -11,6 +11,7 @@
 
   $: dueDateStatus = getDueDateStatus(task.due_date);
   $: dueDateLabel = getDueDateLabel(task.due_date);
+  $: completedInfo = getCompletedDateInfo(task);
 
   async function handleComplete() {
     await toggleComplete(task.id);
@@ -82,13 +83,24 @@
     </div>
     <div class="task-meta">
       {#if $showDueDates && task.due_date}
-        <span class="task-due {dueDateStatus}">
-          {#if dueDateStatus === 'overdue'}
-            <TriangleAlert size={14} />
-          {:else}
+        {#if task.completed && completedInfo}
+          <span class="task-due completed-date">
             <CalendarDays size={14} />
-          {/if}
-          {dueDateLabel}
+            {formatDate(task.due_date)} &middot; &#10003; Completed {completedInfo.completedFormatted}{#if completedInfo.wasLate} <span class="late-badge">(late)</span>{/if}
+          </span>
+        {:else}
+          <span class="task-due {dueDateStatus}">
+            {#if dueDateStatus === 'overdue'}
+              <TriangleAlert size={14} />
+            {:else}
+              <CalendarDays size={14} />
+            {/if}
+            {dueDateLabel}
+          </span>
+        {/if}
+      {:else if task.completed && completedInfo}
+        <span class="task-due completed-date">
+          &#10003; Completed {completedInfo.completedFormatted}{#if completedInfo.wasLate && task.due_date} <span class="late-badge">(late)</span>{/if}
         </span>
       {/if}
       {#if task.tags && task.tags.length > 0}
@@ -152,6 +164,8 @@
   .task-due.overdue { color: var(--red); font-weight: 600; }
   .task-due.today { color: var(--gold); font-weight: 600; }
   .task-due.tomorrow { color: var(--purple); font-weight: 600; }
+  .task-due.completed-date { color: var(--text-muted); font-weight: 400; }
+  .late-badge { color: #ea580c; font-weight: 500; }
   .task-tags { display: flex; gap: 4px; flex-wrap: wrap; }
   .tag {
     font-size: 11px; padding: 2px 9px; border-radius: 10px; background: var(--tag-bg);

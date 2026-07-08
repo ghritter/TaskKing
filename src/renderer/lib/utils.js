@@ -80,3 +80,24 @@ export function getDueDateLabel(dateStr) {
     default: return `${formatted}`;
   }
 }
+
+export function getCompletedDateInfo(task) {
+  if (!task.completed || !task.completed_at) return null;
+
+  const completedDate = new Date(task.completed_at);
+  const completedFormatted = completedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  let wasLate = false;
+  if (task.due_date) {
+    const parts = task.due_date.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts.map(Number);
+      const dueDate = new Date(year, month - 1, day);
+      // Compare dates only (ignore time)
+      const completedDay = new Date(completedDate.getFullYear(), completedDate.getMonth(), completedDate.getDate());
+      wasLate = completedDay > dueDate;
+    }
+  }
+
+  return { completedFormatted, wasLate };
+}

@@ -1,5 +1,5 @@
 <script>
-  import { editingTask, tasks } from '../lib/stores.js';
+  import { editingTask, tasks, showCompleted, sortMode } from '../lib/stores.js';
   import { createTask, updateTask, fetchTasks } from '../lib/api.js';
   import { renderMarkdown } from '../lib/utils.js';
 
@@ -82,8 +82,8 @@
       await updateTask($editingTask.id, data);
     }
 
-    // Refresh task list
-    const result = await fetchTasks({ sort: 'custom', show_completed: 'true' });
+    // Refresh task list respecting current view settings
+    const result = await fetchTasks({ sort: $sortMode, show_completed: String($showCompleted) });
     if (result) $tasks = result.tasks;
 
     close();

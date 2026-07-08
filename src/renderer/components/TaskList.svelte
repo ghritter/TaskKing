@@ -1,6 +1,6 @@
 <script>
   import { onMount, afterUpdate } from 'svelte';
-  import { tasks, sortMode } from '../lib/stores.js';
+  import { tasks, sortMode, showCompleted } from '../lib/stores.js';
   import { reorderTasks, fetchTasks } from '../lib/api.js';
   import TaskItem from './TaskItem.svelte';
   import Sortable from 'sortablejs';
@@ -46,7 +46,7 @@
   }
 
   async function refreshTasks() {
-    const result = await fetchTasks({ sort: $sortMode, show_completed: 'true' });
+    const result = await fetchTasks({ sort: $sortMode, show_completed: String($showCompleted) });
     if (result) $tasks = result.tasks;
   }
 </script>
