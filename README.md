@@ -292,10 +292,10 @@ npx @electron/packager . TaskKing --platform=win32 --arch=x64 --out=dist --overw
 ### Package for Mac (Apple Silicon)
 
 ```bash
-npx @electron/packager . TaskKing --platform=darwin --arch=arm64 --out=dist --overwrite --icon=src/renderer/assets/icon-256.png
+npx @electron/packager . TaskKing --platform=darwin --arch=arm64 --out=dist --overwrite --icon=src/renderer/assets/icon.icns
 ```
 
-Note: macOS builds require a Mac or admin privileges on Windows (for symlink creation).
+Note: macOS builds require a Mac or admin privileges on Windows (for symlink creation). electron-packager requires an `.icns` file for macOS icons (not `.png`); run `node scripts/generate-icon.js` to regenerate `icon.icns` if the source `crown-logo.svg` changes.
 
 ### Package for Linux
 

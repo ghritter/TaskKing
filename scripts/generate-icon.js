@@ -1,4 +1,5 @@
 const sharp = require('sharp');
+const png2icons = require('png2icons');
 const fs = require('fs');
 const path = require('path');
 
@@ -6,6 +7,8 @@ const svgPath = path.join(__dirname, '..', 'src', 'renderer', 'assets', 'crown-l
 const assetsDir = path.join(__dirname, '..', 'src', 'renderer', 'assets');
 const icoPath = path.join(assetsDir, 'icon.ico');
 const png256Path = path.join(assetsDir, 'icon-256.png');
+const png1024Path = path.join(assetsDir, 'icon-1024.png');
+const icnsPath = path.join(assetsDir, 'icon.icns');
 
 async function createIco(pngBuffers) {
   // ICO file format:
@@ -67,6 +70,27 @@ async function generate() {
   const icoBuffer = await createIco(pngBuffers);
   fs.writeFileSync(icoPath, icoBuffer);
   console.log('Generated ICO:', icoPath, `(${icoBuffer.length} bytes)`);
+
+  // Generate a 1024x1024 source PNG for ICNS (macOS icons need up to
+  // 512x512@2x = 1024px for retina displays; per png2icons docs, 1024px
+  // RGBA input gives the best quality across all embedded sizes)
+  const png1024Buffer = await sharp(svgPath)
+    .resize(1024, 1024)
+    .png()
+    .toBuffer();
+  fs.writeFileSync(png1024Path, png1024Buffer);
+  console.log('Generated 1024x1024 PNG buffer');
+
+  // Create ICNS (macOS) from the 1024px source
+  png2icons.setLogger(console.log);
+  const icnsBuffer = png2icons.createICNS(png1024Buffer, png2icons.BICUBIC2, 0);
+  if (icnsBuffer) {
+    fs.writeFileSync(icnsPath, icnsBuffer);
+    console.log('Generated ICNS:', icnsPath, `(${icnsBuffer.length} bytes)`);
+  } else {
+    console.error('ICNS generation failed (png2icons returned null)');
+    process.exit(1);
+  }
 }
 
 generate().catch(err => {
